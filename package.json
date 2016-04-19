@@ -6,7 +6,7 @@
   "scripts": {
     "build": "webpack",
     "watch": "webpack --watch",
-    "dev": "webpackage-dev-server --port 3000",
+    "dev": "webpack-dev-server --port 3000",
     "setup": "npm install && elm package install"
   },
   "repository": "https://github.com/chriswk/zombie-elm",
