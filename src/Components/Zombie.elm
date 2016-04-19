@@ -5,22 +5,21 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import String
 import Window
+import Effects exposing (Effects)
+import Random exposing (Seed)
 
 type Action
   = NoOp
 
 type alias Tile =
-  { matched: Bool
+  { revealed: Bool
   , peeking: Bool
   , matched: Bool
   , name: String
   }
 
 type alias Model =
-  { gameLength: Int
-  , ticksPerSand: Int
-  , remainingTicks: Int
-  , peekingTicks: Int
+  { seed: Seed
   , tiles: List Tile
   }
 
@@ -55,3 +54,11 @@ tileHtml tile =
 lineHtml : List Tile -> Html
 lineHtml tileList =
   div [ class "line" ] (List.map tileHtml tileList)
+
+view : Signal.Address Action -> Model -> Html
+view address model =
+  lineHtml model.tiles
+
+update : Action -> Model -> (Model, Effects Action)
+update action model =
+  (model, Effects.none)

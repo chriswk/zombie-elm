@@ -9,25 +9,21 @@ import Components.Zombie exposing (..)
 import StartApp
 import Random exposing (initialSeed)
 
-initialModel : AppModel
+initialModel : Model
 initialModel =
-  { tileCount = 16
-  , tiles = []
-  , seed = initialSeed 5152 }
+  { tiles = []
+  , seed = initialSeed 5152
+  }
 
-startTimeSeed : Signal Seed
-startTimeSeed = Random.initialSeed << round <~ Time.startTime
-
-
-init : ( AppModel, Effects Action )
+init : ( Model, Effects Action )
 init =
     let
-        tiles = tilesList initialModel.seed initialModel.tileCount
-        m = { initialModel | tiles = (fst tiles), seed = (snd tiles) }
+        tiles = gameTiles
+        m = { initialModel | tiles = tiles }
     in ( m, Effects.none )
 
 
-app : StartApp.App AppModel
+app : StartApp.App Model
 app =
   StartApp.start
     { init = init
