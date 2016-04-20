@@ -56,8 +56,7 @@ lineHtml tileList =
   div [ class "line" ] (List.map tileHtml tileList)
 
 view : Signal.Address Action -> Model -> Html
-view address model =
-  lineHtml model.tiles
+view address model = text "Hello"
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
