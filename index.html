@@ -7329,6 +7329,33 @@ Elm.Random.make = function (_elm) {
                                ,maxInt: maxInt
                                ,generate: generate
                                ,initialSeed: initialSeed};
+};Elm.Trampoline = Elm.Trampoline || {};
+Elm.Trampoline.make = function (_elm) {
+   "use strict";
+   _elm.Trampoline = _elm.Trampoline || {};
+   if (_elm.Trampoline.values) return _elm.Trampoline.values;
+   var _U = Elm.Native.Utils.make(_elm);
+   var _op = {};
+   var trampoline = function (tramp) {
+      trampoline: while (true) {
+         var _p0 = tramp;
+         if (_p0.ctor === "Done") {
+               return _p0._0;
+            } else {
+               var _v1 = _p0._0({ctor: "_Tuple0"});
+               tramp = _v1;
+               continue trampoline;
+            }
+      }
+   };
+   var Continue = function (a) {
+      return {ctor: "Continue",_0: a};
+   };
+   var Done = function (a) {    return {ctor: "Done",_0: a};};
+   return _elm.Trampoline.values = {_op: _op
+                                   ,trampoline: trampoline
+                                   ,Done: Done
+                                   ,Continue: Continue};
 };Elm.Native.Char = {};
 Elm.Native.Char.make = function(localRuntime) {
 	localRuntime.Native = localRuntime.Native || {};
@@ -12066,6 +12093,81 @@ Elm.Effects.make = function (_elm) {
                                 ,map: map
                                 ,batch: batch
                                 ,toTask: toTask};
+};Elm.Exts = Elm.Exts || {};
+Elm.Exts.List = Elm.Exts.List || {};
+Elm.Exts.List.make = function (_elm) {
+   "use strict";
+   _elm.Exts = _elm.Exts || {};
+   _elm.Exts.List = _elm.Exts.List || {};
+   if (_elm.Exts.List.values) return _elm.Exts.List.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Array = Elm.Array.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Dict = Elm.Dict.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Trampoline = Elm.Trampoline.make(_elm);
+   var _op = {};
+   var rest = function (_p0) {
+      return A2($Maybe.withDefault,_U.list([]),$List.tail(_p0));
+   };
+   var firstMatch = F2(function (predicate,items) {
+      firstMatch: while (true) {
+         var _p1 = items;
+         if (_p1.ctor === "[]") {
+               return $Maybe.Nothing;
+            } else {
+               var _p2 = _p1._0;
+               if (predicate(_p2)) return $Maybe.Just(_p2); else {
+                     var _v1 = predicate,_v2 = _p1._1;
+                     predicate = _v1;
+                     items = _v2;
+                     continue firstMatch;
+                  }
+            }
+      }
+   });
+   var singleton = function (x) {    return _U.list([x]);};
+   var maybeSingleton = function (_p3) {
+      return A2($Maybe.withDefault,
+      _U.list([]),
+      A2($Maybe.map,singleton,_p3));
+   };
+   var mergeBy = F3(function (f,xs,ys) {
+      var reducer = F2(function (v,acc) {
+         return A3($Dict.insert,f(v),v,acc);
+      });
+      return $Dict.values(A3($List.foldl,
+      reducer,
+      $Dict.empty,
+      A2($Basics._op["++"],xs,ys)));
+   });
+   var chunk$ = F3(function (n,xs,accum) {
+      return $List.isEmpty(xs) ? $Trampoline.Done($Array.toList(accum)) : $Trampoline.Continue(function (_p4) {
+         var _p5 = _p4;
+         return A3(chunk$,
+         n,
+         A2($List.drop,n,xs),
+         A2($Array.push,A2($List.take,n,xs),accum));
+      });
+   });
+   var chunk = F2(function (n,xs) {
+      return _U.cmp(n,
+      1) < 0 ? singleton(xs) : $Trampoline.trampoline(A3(chunk$,
+      n,
+      xs,
+      $Array.empty));
+   });
+   return _elm.Exts.List.values = {_op: _op
+                                  ,chunk: chunk
+                                  ,mergeBy: mergeBy
+                                  ,singleton: singleton
+                                  ,maybeSingleton: maybeSingleton
+                                  ,firstMatch: firstMatch
+                                  ,rest: rest};
 };Elm.Components = Elm.Components || {};
 Elm.Components.Zombie = Elm.Components.Zombie || {};
 Elm.Components.Zombie.make = function (_elm) {
@@ -12078,6 +12180,7 @@ Elm.Components.Zombie.make = function (_elm) {
    $Basics = Elm.Basics.make(_elm),
    $Debug = Elm.Debug.make(_elm),
    $Effects = Elm.Effects.make(_elm),
+   $Exts$List = Elm.Exts.List.make(_elm),
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
    $List = Elm.List.make(_elm),
@@ -12109,26 +12212,51 @@ Elm.Components.Zombie.make = function (_elm) {
       _U.list([$Html$Attributes.$class("line")]),
       A2($List.map,tileHtml,tileList));
    };
+   var boardHtml = function (tileList) {
+      return A2($Html.div,
+      _U.list([$Html$Attributes.$class("board clearfix")]),
+      A2($List.map,lineHtml,tileList));
+   };
+   var view = F2(function (address,model) {
+      return boardHtml(A2($Exts$List.chunk,4,model.tiles));
+   });
    var Model = F2(function (a,b) {    return {seed: a,tiles: b};});
    var Tile = F2(function (a,b) {
       return {revealed: a,name: b};
    });
    var newTile = function (name) {    return A2(Tile,false,name);};
+   var revealedTile = function (name) {
+      return A2(Tile,true,name);
+   };
    var gameTiles = A2($List.map,
-   newTile,
-   _U.list(["h1","h1","h2","h2","h3","h3","h4","h4","h5","h5"]));
-   var view = F2(function (address,model) {
-      return tileHtml(newTile("h1"));
-   });
+   revealedTile,
+   _U.list(["h1"
+           ,"h1"
+           ,"h2"
+           ,"h2"
+           ,"h3"
+           ,"h3"
+           ,"h4"
+           ,"h4"
+           ,"h5"
+           ,"h5"
+           ,"h6"
+           ,"h6"
+           ,"gy"
+           ,"zo"
+           ,"zo"
+           ,"zo"]));
    var NoOp = {ctor: "NoOp"};
    return _elm.Components.Zombie.values = {_op: _op
                                           ,NoOp: NoOp
                                           ,Tile: Tile
                                           ,Model: Model
                                           ,newTile: newTile
+                                          ,revealedTile: revealedTile
                                           ,gameTiles: gameTiles
                                           ,tileHtml: tileHtml
                                           ,lineHtml: lineHtml
+                                          ,boardHtml: boardHtml
                                           ,view: view
                                           ,update: update};
 };Elm.StartApp = Elm.StartApp || {};
@@ -12213,23 +12341,14 @@ Elm.Main.make = function (_elm) {
    $StartApp = Elm.StartApp.make(_elm),
    $Task = Elm.Task.make(_elm);
    var _op = {};
-   var initialModel = {tiles: _U.list([])
-                      ,seed: $Random.initialSeed(5152)};
+   var initialModel = {tiles: _U.list([]),seed: $Random.initialSeed(5152)};
    var init = function () {
       var tiles = $Components$Zombie.gameTiles;
       var m = _U.update(initialModel,{tiles: tiles});
       return {ctor: "_Tuple2",_0: m,_1: $Effects.none};
    }();
-   var app = $StartApp.start({init: init
-                             ,inputs: _U.list([])
-                             ,update: $Components$Zombie.update
-                             ,view: $Components$Zombie.view});
+   var app = $StartApp.start({init: init,inputs: _U.list([]),update: $Components$Zombie.update,view: $Components$Zombie.view});
    var main = app.html;
-   var runner = Elm.Native.Task.make(_elm).performSignal("runner",
-   app.tasks);
-   return _elm.Main.values = {_op: _op
-                             ,initialModel: initialModel
-                             ,init: init
-                             ,app: app
-                             ,main: main};
+   var runner = Elm.Native.Task.make(_elm).performSignal("runner",app.tasks);
+   return _elm.Main.values = {_op: _op,initialModel: initialModel,init: init,app: app,main: main};
 };</script></head><body><script type="text/javascript">Elm.fullscreen(Elm.Main)</script></body></html>
