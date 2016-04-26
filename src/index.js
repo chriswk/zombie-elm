@@ -1,7 +1,6 @@
-'use strict';
+require( './styles/_reset.scss' );
+require( './styles/style.scss' );
 
-require('./index.html');
-var Elm = require('./Main.elm');
-var mountNode = document.getElementById('main');
 
-var app = Elm.embed(Elm.Main, mountNode);
+var Elm = require( './Main' );
+Elm.embed(Elm.Main, document.getElementById('main'));

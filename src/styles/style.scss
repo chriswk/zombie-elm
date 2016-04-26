@@ -1,6 +1,6 @@
 
 body {
-    background: #b5afa7 url(zombieclj.png) no-repeat 23px 30px;
+    background: #b5afa7 url(/img/zombieclj.png) no-repeat 23px 30px;
     background-size: 380px;
 }
 
@@ -192,7 +192,7 @@ body.game-over {
 }
 
 .back {
-    background: url(zombie-tiles.jpg);
+    background: url(/img/zombie-tiles.jpg);
     background-size: 1600px;
 }
 .back.h2 {background-position: -200px 0;}
