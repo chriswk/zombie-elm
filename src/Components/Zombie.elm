@@ -2,13 +2,11 @@ module Components.Zombie (..) where
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (..)
-import String
-import Window
 import Effects exposing (Effects)
-import Random exposing (Seed)
+import Random exposing (Seed, generate)
 import Exts.List exposing (chunk)
 import Array exposing (toList, fromList)
+import Random.Array exposing (shuffle)
 
 
 type Action
@@ -37,9 +35,30 @@ revealedTile name =
   Tile True name
 
 
+shuffleTiles : Model -> Model
+shuffleTiles model =
+  let
+    tilesArray =
+      fromList model.tiles
+
+    generator =
+      shuffle tilesArray
+
+    shuffles =
+      generate generator model.seed
+
+    shuffledTiles =
+      toList (fst shuffles)
+
+    newSeed =
+      snd shuffles
+  in
+    { model | tiles = shuffledTiles, seed = newSeed }
+
+
 gameTiles =
   List.map
-    revealedTile
+    newTile
     [ "h1"
     , "h1"
     , "h2"
