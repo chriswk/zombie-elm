@@ -25,8 +25,11 @@ init =
 
     m =
       { initialModel | tiles = tiles }
+
+    model =
+      shuffleTiles m
   in
-    ( m, Effects.none )
+    ( model, Effects.none )
 
 
 app : StartApp.App Model
@@ -46,3 +49,6 @@ main =
 port runner : Signal (Task.Task Never ())
 port runner =
   app.tasks
+
+-- HOT-SWAPPING
+port swap : Signal.Signal Bool

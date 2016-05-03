@@ -2,19 +2,24 @@ module Components.Zombie (..) where
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onClick)
 import Effects exposing (Effects)
 import Random exposing (Seed, generate)
 import Exts.List exposing (chunk)
 import Array exposing (toList, fromList)
 import Random.Array exposing (shuffle)
+import Signal exposing (Signal, Address)
 
 
 type Action
   = NoOp
+  | Peeking Int Bool
 
 
 type alias Tile =
-  { revealed : Bool
+  { id : Int
+  , revealed : Bool
+  , peeking : Bool
   , name : String
   }
 
@@ -25,14 +30,15 @@ type alias Model =
   }
 
 
-newTile : String -> Tile
-newTile name =
-  Tile False name
+
+newTile : Int -> String -> Tile
+newTile id name =
+  Tile id False False name
 
 
-revealedTile : String -> Tile
-revealedTile name =
-  Tile True name
+revealedTile : Int -> String -> Tile
+revealedTile id name =
+  Tile id True False name
 
 
 shuffleTiles : Model -> Model
@@ -57,7 +63,7 @@ shuffleTiles model =
 
 
 gameTiles =
-  List.map
+  List.indexedMap
     newTile
     [ "h1"
     , "h1"
@@ -78,8 +84,8 @@ gameTiles =
     ]
 
 
-tileHtml : Tile -> Html
-tileHtml tile =
+tileHtml : Address Action -> Tile -> Html
+tileHtml address tile =
   let
     backClassname =
       "back " ++ tile.name
@@ -97,29 +103,39 @@ tileHtml tile =
       [ class "cell" ]
       [ div
           [ class tileClass ]
-          [ div [ class "front" ] []
+          [ div [ class "front", onClick address (Peeking tile.id True) ] []
           , div [ class backClassname ] []
           ]
       ]
 
 
-lineHtml : List Tile -> Html
-lineHtml tileList =
-  div [ class "line" ] (List.map tileHtml tileList)
+lineHtml : Address Action -> List Tile -> Html
+lineHtml address tileList =
+  div [ class "line" ] (List.map (tileHtml address) tileList)
 
 
-boardHtml : List (List Tile) -> Html
-boardHtml tileList =
+boardHtml : Address Action -> List (List Tile) -> Html
+boardHtml address tileList =
   div
     [ class "board clearfix" ]
-    (List.map lineHtml tileList)
+    (List.map (lineHtml address) tileList)
 
+peekTile : Model -> Int -> Bool -> Model
+peekTile model id peeking =
+  let
+    updateTile t = if t.id == id then { t | revealed = peeking } else t
+  in
+    { model | tiles = List.map updateTile model.tiles }
 
-view : Signal.Address Action -> Model -> Html
+view : Address Action -> Model -> Html
 view address model =
-  boardHtml (chunk 4 model.tiles)
+  boardHtml address (chunk 4 model.tiles)
 
 
 update : Action -> Model -> ( Model, Effects Action )
 update action model =
-  ( model, Effects.none )
+  case action of
+    NoOp ->
+      ( model, Effects.none )
+    Peeking id peek ->
+      ((peekTile model id peek), Effects.none)
