@@ -30,7 +30,6 @@ type alias Model =
   }
 
 
-
 newTile : Int -> String -> Tile
 newTile id name =
   Tile id False False name
@@ -62,26 +61,9 @@ shuffleTiles model =
     { model | tiles = shuffledTiles, seed = newSeed }
 
 
+gameTiles : List Tile
 gameTiles =
-  List.indexedMap
-    newTile
-    [ "h1"
-    , "h1"
-    , "h2"
-    , "h2"
-    , "h3"
-    , "h3"
-    , "h4"
-    , "h4"
-    , "h5"
-    , "h5"
-    , "h6"
-    , "h6"
-    , "gy"
-    , "zo"
-    , "zo"
-    , "zo"
-    ]
+  List.indexedMap newTile [ "h1", "h1", "h2", "h2", "h3", "h3", "h4", "h4", "h5", "h5", "h6", "h6", "gy", "zo", "zo", "zo" ]
 
 
 tileHtml : Address Action -> Tile -> Html
@@ -120,12 +102,18 @@ boardHtml address tileList =
     [ class "board clearfix" ]
     (List.map (lineHtml address) tileList)
 
+
 peekTile : Model -> Int -> Bool -> Model
 peekTile model id peeking =
   let
-    updateTile t = if t.id == id then { t | revealed = peeking } else t
+    updateTile t =
+      if t.id == id then
+        { t | revealed = peeking }
+      else
+        t
   in
     { model | tiles = List.map updateTile model.tiles }
+
 
 view : Address Action -> Model -> Html
 view address model =
@@ -137,5 +125,6 @@ update action model =
   case action of
     NoOp ->
       ( model, Effects.none )
+
     Peeking id peek ->
-      ((peekTile model id peek), Effects.none)
+      ( (peekTile model id peek), Effects.none )
